@@ -47,7 +47,7 @@ def _build_mapper(ex,
   print >>stderr, socket.gethostname(), "finish: ", time.time()-st
   
   result = core.LocalKernelResult()
-  result.result = None 
+  result.result = rf #None 
   return result
 
 class RandomForestClassifier(object):
