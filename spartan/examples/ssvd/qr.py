@@ -32,14 +32,18 @@ def qr(Y):
 
   # YTY = Y'Y. YTY has shape of (K, K).
   YTY = expr.dot(expr.transpose(Y), Y).glom() 
-  
+  print "after mat" 
   # Do cholesky decomposition and get R.
   R = np.linalg.cholesky(YTY).T
-
+  print "after cholesky" 
   # Find the inverse of R
   inv_R = np.linalg.inv(R)
+  
+  inv_R = expr.from_numpy(inv_R, tile_hint=(20, 20))
 
+  print "after inv"
   # Q = Y * inv(R)
-  Q = expr.dot(Y, inv_R).force()
+  Q = expr.dot(Y, inv_R, tile_hint=(Y.tile_shape()[0], inv_R.shape[1])).force()
+  print "after final dot"
 
   return Q, R 

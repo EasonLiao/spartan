@@ -5,6 +5,10 @@ import socket
 from .helper import *
 import numpy as np
 
+import time
+from sys import stderr
+import socket
+
 def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
   ''' Find all pair similarities between items. 
   Parameters
@@ -22,6 +26,7 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
          How many items need to be fetched for each iteration, now this equals to 
          the columns of tiles.
   '''
+  st = time.time()
   M = rating_table.shape[0]
   N = rating_table.shape[1]
 
@@ -36,9 +41,9 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
   # The start index of the items which will be fetched next.
   fetch_start_idx = 0
   count = 0
+  step *= 1 
 
   while fetch_start_idx < N: 
-    util.log_info("Round : %s on %s", count, socket.gethostname())
     # Maybe last tile of the rating matrix doesn't have enough items.
     if N - fetch_start_idx <= step:
       step = N - fetch_start_idx
@@ -86,6 +91,7 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
     # Update fetch_start_idx, fetch next part of table.
     fetch_start_idx += step
 
+  print >>stderr, socket.gethostname(), time.time() - st
   result = core.LocalKernelResult()
   result.result = None
   return result
@@ -187,16 +193,23 @@ class ItemBasedRecommender(object):
     assert self.rating_table.tile_shape()[0] == M, \
            "rating table is only allowed to tile by columns!"
 
+    st = time.time()
+    print "before zero"
     self.similarity_table = expr.zeros(shape=(N, N), 
                                        tile_hint=(self.rating_table.tile_shape()[1], N)).force() 
-
-    self.item_norm = self._get_norm_of_each_item(self.rating_table) 
     
+    self.item_norm = self._get_norm_of_each_item(self.rating_table) 
+    print "norm : ", time.time() - st
+
+
+    st = time.time()
     self.rating_table.foreach_tile(mapper_fn=_similarity_mapper,
                                    kw={'rating_table' : self.rating_table,
                                        'similarity_table' : self.similarity_table,
                                        'item_norm' : self.item_norm,
                                        'step' : self.rating_table.tile_shape()[1]})
+                                   
+    print "map:", time.time() - st
 
     # Release the memory for item_norm
     self.item_norm = None
@@ -207,7 +220,9 @@ class ItemBasedRecommender(object):
     top_k_similar_indices = expr.zeros((N, k), 
                                         tile_hint=(self.rating_table.tile_shape()[1], k), dtype=np.int).force()
     
-    
+   
+    print "vefore sort"
+    st = time.time()
     # Find top-k similar items for each item.
     # Store the similarity scores into table top_k_similar table.
     # Store the indices of top k items into table top_k_similar_indices.
@@ -216,6 +231,7 @@ class ItemBasedRecommender(object):
                                            'top_k_similar_table' : top_k_similar_table,
                                            'top_k_similar_indices' : top_k_similar_indices,
                                            'k' : k})
+    print "sort:", time.time() - st
 
     self.top_k_similar_table = top_k_similar_table.glom()
     self.top_k_similar_indices = top_k_similar_indices.glom()

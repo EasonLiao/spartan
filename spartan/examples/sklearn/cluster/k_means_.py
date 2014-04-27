@@ -4,6 +4,10 @@ from spartan import expr, util
 import parakeet
 from spartan.array import distarray, extent
 
+from sys import stderr
+import socket
+import time
+
 @util.synchronized
 @parakeet.jit
 def _find_closest(pts, centers):
@@ -25,6 +29,8 @@ def _find_closest(pts, centers):
 
 def _find_cluster_mapper(inputs, ex, d_pts, old_centers, 
                          new_centers, new_counts, labels):
+
+  st = time.time()
   centers = old_centers
   pts = d_pts.fetch(ex)
   closest = _find_closest(pts, centers)
@@ -42,6 +48,8 @@ def _find_cluster_mapper(inputs, ex, d_pts, old_centers,
   new_counts.update(extent.from_shape(new_counts.shape), l_counts)
   labels.update(extent.create(ex.ul, (ex.lr[0], 1), labels.shape), 
                 closest.reshape(pts.shape[0], 1))
+
+  print >>stderr, socket.gethostname(), time.time() - st
   return []
 
 
@@ -78,6 +86,7 @@ class KMeans(object):
       centers = np.random.rand(self.n_clusters, num_dim)
     
     for i in range(self.n_iter):
+      print "iter  :", i
       # Reset them to zero.
       new_centers = expr.ndarray((self.n_clusters, num_dim), reduce_fn=lambda a, b: a + b)
       new_counts = expr.ndarray((self.n_clusters, 1), dtype=np.int, reduce_fn=lambda a, b: a + b)

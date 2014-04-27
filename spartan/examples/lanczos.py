@@ -1,6 +1,8 @@
 import numpy as np
 from spartan import expr, blob_ctx, util
 import math
+import time
+from sys import stderr
 
 def solve(A, AT, desired_rank, is_symmetric=False):
   '''
@@ -39,13 +41,15 @@ def solve(A, AT, desired_rank, is_symmetric=False):
 
   for i in range(0, desired_rank):
     util.log_info("Iter : %s", i)
-    v_next_expr = expr.from_numpy(v_next.reshape(n, 1), tile_hint=(n/ctx.num_workers, 1))
+    v_next_expr = expr.from_numpy(v_next.reshape(n, 1), tile_hint=(n/ctx.num_workers*2, 1))
 
     if is_symmetric:
       w = expr.dot(A, v_next_expr).glom().reshape(n)
     else:
+      st = time.time()
       w = expr.dot(A, v_next_expr, tile_hint=(min(*A.tile_shape()), 1)).force()
       w = expr.dot(AT, w, tile_hint=(min(*A.tile_shape()), 1)).glom().reshape(n)
+      print >>stderr, time.time() - st
 
     alpha[i] = np.dot(w, v_next)
     w = w - alpha[i] * v_next - beta[i] * v_prev
