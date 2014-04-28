@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+set host [lindex $argv 0]
+spawn ssh root@$host
+for {} {1} {} {
+  expect {
+    "*(yes/no)?"   { send "yes\r" }
+    "#" { send "\r";break }
+  }
+}
+
+expect {
+  "#" { send "sudo apt-get install libatlas-base-dev\r" }
+}
+expect {
+  "*Do you want to continue*" { send "Y\r" }
+  "#" { send "\r" }
+}
+
+expect {
+  "#" { send "ls /usr/lib/atlas-base\r" }
+}
+
+expect {
+  "#" { send "exit\r" }
+}
+
