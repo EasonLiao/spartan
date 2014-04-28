@@ -33,6 +33,9 @@ from .expr import *
 from . import config
 from .config import FLAGS
 from .cluster import start_cluster
+import parakeet
+
+parakeet.config.backend = "c"
 
 
 CTX = None

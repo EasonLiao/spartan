@@ -44,12 +44,14 @@ def _find_cluster_mapper(inputs, ex, d_pts, old_centers,
     l_centers[i] = pts[matching].sum(axis=0) 
   
   # update centroid positions
+  st2 = time.time()
   new_centers.update(extent.from_shape(new_centers.shape), l_centers)
   new_counts.update(extent.from_shape(new_counts.shape), l_counts)
   labels.update(extent.create(ex.ul, (ex.lr[0], 1), labels.shape), 
                 closest.reshape(pts.shape[0], 1))
-
-  print >>stderr, socket.gethostname(), time.time() - st
+  
+  #print >>stderr, socket.gethostname, "update : ", time.time() - st2
+  #print >>stderr, socket.gethostname(), time.time() - st
   return []
 
 
@@ -107,6 +109,7 @@ class KMeans(object):
       # If any centroids don't have any points assigined to them.
       zcount_indices = (new_counts == 0).reshape(self.n_clusters)
       
+      """
       if np.any(zcount_indices):
         # One or more centroids may not have any points assigned to them,
         # which results in their position being the zero-vector.  We reseed these
@@ -115,6 +118,7 @@ class KMeans(object):
         # In order to get rid of dividing by zero.
         new_counts[zcount_indices] = 1
         new_centers[zcount_indices, :] = np.random.randn(n_points, num_dim)
+      """
 
       new_centers = new_centers / new_counts
       centers = new_centers

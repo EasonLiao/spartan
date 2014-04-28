@@ -27,7 +27,7 @@ def _knn_mapper(ex,
   algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
       Algorithm used to compute the nearest neighbors locally:
   """
-  st = time.time()
+  st = time.time() 
   result = core.LocalKernelResult()
   row_start = ex.ul[0]
   col_start = ex.ul[1]
@@ -42,9 +42,12 @@ def _knn_mapper(ex,
   ul = ex.ul
   lr = (ex.lr[0], X.shape[1])
   ex = array.extent.create(ul, lr, ex.array_shape)
-  X = X.fetch(ex)
-  Q = Q.glom()
   
+  X = X.fetch(ex)
+  #Q = Q.glom()
+  #print >>stderr, "fetch and glom : ", time.time() - st
+  
+  st = time.time()
   """ Run sklearn SKK locally to find the KNN candidates """ 
   nbrs = SKNN(n_neighbors=n_neighbors, 
                 algorithm=algorithm).fit(X)
@@ -134,16 +137,21 @@ class NearestNeighbors(object):
         ind : array
             Indices of the nearest points in the population matrix.
     """
+    """
     if isinstance(X, np.ndarray):
       X = expr.from_numpy(X)
     
     if isinstance(X, expr.Expr):
       X = X.force()
+    """
 
+    st = time.time()
     results = self.X.foreach_tile(mapper_fn = _knn_mapper,
                                   kw = {'X' : self.X, 'Q' : X,
                                         'n_neighbors' : self.n_neighbors,
                                         'algorithm' : self.algorithm})
+    
+    print "map : ", time.time() - st
     dist = None
     ind = None
     """ Get the KNN candidates for each tile of X, then find out the real KNN """

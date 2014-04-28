@@ -330,9 +330,10 @@ def _start_worker(master, local_id):
   '''
   util.log_info('Worker starting up... Master: %s Profile: %s', master, FLAGS.profile_worker)
   rpc.set_default_timeout(FLAGS.default_rpc_timeout)
+
   if FLAGS.use_single_core:
     pid = os.getpid()
-    os.system('taskset -pc %d %d > /dev/null' % (local_id * 2, pid))
+    os.system('taskset -pc %d %d > /dev/null' % (local_id, pid))
     
   master = rpc.connect(*master)
   worker = Worker(master)

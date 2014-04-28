@@ -41,7 +41,7 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
   # The start index of the items which will be fetched next.
   fetch_start_idx = 0
   count = 0
-  step *= 1 
+  step *= 2 
 
   while fetch_start_idx < N: 
     # Maybe last tile of the rating matrix doesn't have enough items.
@@ -77,13 +77,18 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
 
       In final step, we divide S by N, which yields all-pairs similarity.
       '''
+      st = time.time()
       similarities = local_ratings.T.dot(remote_ratings)
       similarities = np.array(similarities.todense())
       norms = local_item_norm.dot(remote_item_norm)
       similarities = similarities / norms
       # In case some norms are zero. 
       similarities = np.nan_to_num(similarities) 
-
+      
+      """
+      if time.time() - st > 0.5:
+        print >>stderr, socket.gethostname(), time.time() - st 
+      """
     # Update this to global array.
     similarity_table[local_start_idx : local_start_idx + similarities.shape[0], 
                      fetch_start_idx : fetch_start_idx + similarities.shape[1]] = similarities
@@ -91,7 +96,7 @@ def _similarity_mapper(ex, rating_table, similarity_table, item_norm, step):
     # Update fetch_start_idx, fetch next part of table.
     fetch_start_idx += step
 
-  print >>stderr, socket.gethostname(), time.time() - st
+  #print >>stderr, socket.gethostname(), time.time() - st
   result = core.LocalKernelResult()
   result.result = None
   return result

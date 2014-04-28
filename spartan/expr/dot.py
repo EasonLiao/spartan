@@ -13,6 +13,10 @@ from .shuffle import target_mapper, notarget_mapper
 from ..core import LocalKernelResult
 from traits.api import PythonValue, HasTraits
 
+import time
+from sys import stderr
+import socket
+
 def _dot_mapper(inputs, ex, av, bv):
   # read current tile of array 'a'
   ex_a = ex
@@ -44,7 +48,9 @@ def _dot_mapper(inputs, ex, av, bv):
   if isinstance(a, sp.coo_matrix) and b.shape[1] == 1:
     result = sparse.dot_coo_dense_unordered_map(a, b)
   else:
+    st = time.time()
     result = a.dot(b)
+    #print >>stderr, "dot", socket.gethostname(), time.time() - st
 
   ul = np.asarray([ex_a.ul[0], 0])
   lr = ul + result.shape

@@ -2,6 +2,7 @@ import spartan
 from spartan import expr, core
 import numpy as np
 from sys import stderr
+import time
 
 def qr(Y):
   ''' Compute the thin qr factorization of a matrix.
@@ -31,19 +32,24 @@ def qr(Y):
   # decomposition, but for now, we use numpy version, it works fine.
 
   # YTY = Y'Y. YTY has shape of (K, K).
+  st = time.time()
   YTY = expr.dot(expr.transpose(Y), Y).glom() 
-  print "after mat" 
+  print "after mat", time.time() - st
+
+  st = time.time()
   # Do cholesky decomposition and get R.
   R = np.linalg.cholesky(YTY).T
-  print "after cholesky" 
+  print "after cholesky", time.time() - st
+
+  st = time.time()
   # Find the inverse of R
   inv_R = np.linalg.inv(R)
-  
-  inv_R = expr.from_numpy(inv_R, tile_hint=(20, 20))
+  #inv_R = expr.from_numpy(inv_R, tile_hint=(20, 20))
+  print "after inv", time.time() - st
 
-  print "after inv"
+  st = time.time()
   # Q = Y * inv(R)
   Q = expr.dot(Y, inv_R, tile_hint=(Y.tile_shape()[0], inv_R.shape[1])).force()
-  print "after final dot"
+  print "after final dot", time.time() - st
 
   return Q, R 

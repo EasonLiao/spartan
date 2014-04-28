@@ -8,9 +8,9 @@ import scipy.sparse as sp
 
 ctx = spartan.initialize()
 
-M = 8000 
-#N = int(10000 * np.sqrt(ctx.num_workers))
-N = int(12000 * np.sqrt(9))
+M = 4000 
+N = int(16000 * np.sqrt(ctx.num_workers))
+#N = int(12000 * np.sqrt(9))
 
 """
 M = 80000 

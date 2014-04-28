@@ -8,11 +8,11 @@ from spartan.examples.sklearn.neighbors import NearestNeighbors as KNN
 
 ctx = spartan.initialize()
 
-DIM = 64 
-SAMPLES_PER_WORKER = 150000
-SAMPLES = SAMPLES_PER_WORKER * 64 
+DIM = 8 
+SAMPLES_PER_WORKER = 500000
+SAMPLES = SAMPLES_PER_WORKER * ctx.num_workers 
 
-Q_SAMPLES = 10 
+Q_SAMPLES = 100 
 
 try:
   print SAMPLES
@@ -20,7 +20,7 @@ try:
   Q = np.random.randn(Q_SAMPLES, DIM)
   
   st = time.time()
-  dist, ind = KNN(algorithm="kd_tree").fit(X).kneighbors(Q, 5)
+  dist, ind = KNN(algorithm="brute").fit(X).kneighbors(Q, 5)
   print time.time() - st
 
 finally:

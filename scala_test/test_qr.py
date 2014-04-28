@@ -15,8 +15,8 @@ from numpy import absolute as abs
 ctx = spartan.initialize()
 
 
-M = 180000 * 64 
-N = 100
+M = 480000 * ctx.num_workers 
+N = 200
 
 
 try:
@@ -25,7 +25,6 @@ try:
   st = time.time()
   q, r = qr(A)
   print time.time() - st
-
 finally:
   ctx.shutdown()
 
